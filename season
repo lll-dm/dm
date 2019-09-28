@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>四季</title>
+    <style type="text/css">
+        body,html,page{
+            height: 100%;
+            width: 100%;
+            margin: 0;
+        }
+        page{
+            font-size: 300px;
+            position: absolute;
+            padding-top: 55%;
+            padding-left: 35%;
+        }
+        #a{
+            background: green;
+            animation:myframe1 4s infinite ;
+        }
+        #b{
+            background: red;
+            animation:myframe2 4s infinite ;
+        }
+        #c{
+            background: yellow;
+            animation:myframe3 4s infinite ;
+        }
+        #d{
+            background: black;
+            color: white;
+            animation:myframe4 4s infinite ;
+        }
+        @keyframes myframe1{
+            0%{opacity:0;}
+            24%{opacity: 100}
+            25%{opacity: 0}
+            100%{opacity: 0}
+        }
+        @keyframes myframe2{
+             0%{opacity:0;}
+             25%{opacity: 0}
+             49%{opacity: 100}
+             50%{opacity: 0}
+             100%{opacity: 0}
+         }
+        @keyframes myframe3{
+            0%{opacity:0;}
+            50%{opacity: 0}
+            74%{opacity: 100}
+            75%{opacity: 0}
+            100%{opacity: 0}
+        }
+        @keyframes myframe4{
+            0%{opacity:0;}
+            75%{opacity: 0}
+            100%{opacity: 100}
+        }
+</style>
+</head>
+
+<body>
+    <page id="a">春</page>
+    <page id="b">夏</page>
+    <page id="c">秋</page>
+    <page id="d">冬</page>
+</body>
+</html>
