@@ -1,0 +1,475 @@
+<html>
+	<head >
+		<title></title>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<style>
+			#header,#progress{
+				margin: 0 auto;
+				width: 660px;
+			}
+			p{
+				margin-bottom: 0;
+				text-align: center;
+			}
+			table{
+				margin: 0 auto;
+			}
+			td {
+				width: 145px;
+				height: 195px;
+				background-image: url(images/spade.jpg);
+				background-position-x: -960px;
+				background-position-y: -590px;
+				background-repeat: no-repeat;
+				background-color: transparent;
+				background-attachment: scroll;
+				border-color: blue;
+				border-style: solid;
+				border-width: 1px;
+			}
+			#num{
+				font-size: 20px;
+			}
+	</style>
+	<script>
+	/**
+	 * x:162
+	 * [8,3]1
+	 * [-154,7]2
+	 * [-314,7]3
+	 * [-476,7]4
+	 * [-638,7]5
+	 * [-800,7]6
+	 * [-960,7]7
+	 * [-960,-590]反面
+	 * [8,-590]8
+	 * [-154,-590]9
+	 * [-314,-590]10
+	 * [-476,-590]11
+	 * [-638,-590]12
+	 * [-800,-590]12
+	 * */
+	//预防多次点击出现程序bug，设置一个等待变量
+	var waitOver=true;//false需要等待；true不需要等待
+	function Wait() {
+		if(waitOver){
+			waitOver=false;
+			setTimeout(function () {
+				waitOver=true;
+			},500);
+		}
+	}
+	var cards=[[5,5],[-154,5],[-314,5],[-476,5],[-638,5],[-800,5],[-960,5],[5,-590],[-154,-590],[-314,-590],[-473,-590],[-635,-590],[-795,-590]];
+	function fapai(){
+		var table=document.getElementsByTagName("table")[0];
+		//获取table标签
+		//getElementsByTagName()返回一个数组，取其第一个
+		var tds=document.getElementsByTagName("td");
+		//获取td标签
+		var flag=0;
+		//是否发牌：0不发牌；1发牌
+		//记录八张牌号，其中两两相同
+		var cardNum=new Array(tds.length);
+		//随机发牌的牌号并且两两相同
+		for (var i = 0; i < tds.length/2; ) {
+			//牌号0-12的随机数
+			var num=Math.floor(Math.random()*cards.length);
+			//实现两两相同
+			for (var j = 0; j < cardNum.length/2; j++) {
+				if(cardNum[j]==num){
+					flag=0;
+					break;
+				}
+				flag=1;
+			}
+			if(flag==1) {
+				cardNum[i] = num;
+				cardNum[tds.length - 1 - i] = num;
+				i++;
+			}
+		}
+		//记录td的div的个数
+		var tdfirstChild=0;
+		//实现随机发牌，td下的div的创建及其style的初始化
+		for (var i = 0;; i++) {
+			//把牌随机分配，td0-7的随机数
+			var num=Math.floor(Math.random()*tds.length);
+			if(tds[num].firstChild==null){
+				//card的css样式
+				var cardCss="width:145px;height:195px;z-index:-2;" +
+						"position:relative;background:transparent " +
+						"url(images/spade.jpg) no-repeat "
+						+ cards[cardNum[tdfirstChild]][0] +"px "+ cards[cardNum[tdfirstChild]][1] +"px;";
+				var div=document.createElement('div');
+				div.style.cssText=cardCss;
+				tds[num].appendChild(div);
+				//tds[num].style.cssText=cardCss;
+				tdfirstChild++;
+			}
+			if(tdfirstChild==tds.length){
+				return;
+			}
+
+		}
+
+	}
+	function fanpai(el){
+		if(el.tagName=='TD'){
+			el.firstChild.style.zIndex=2;
+		}
+		else if(el.tagName=='DIV'){
+			el.style.zIndex=-2;
+		}
+		getSounds("sounds/翻牌.mp3");
+	}
+	//延时翻牌
+	function delayfanpai(el) {
+		setTimeout(fanpai,500,el);
+	}
+	//更换td的背景，删除td下的div
+	function xiaoshi(el) {
+		el.parentNode.style.background=BACK_BG;
+		el.parentNode.removeChild(el);
+		getSounds("sounds/配对成功.mp3");
+		if(isWin()){
+////////////
+			getSounds("sounds/游戏胜利.mp3");
+			if(confirm("恭喜您胜利了,是否重新开始？")){
+				clearInterval(timer);
+				var table=document.getElementsByTagName('table')[0];
+				var tds=table.getElementsByTagName('td');
+				for (var i = 0; i < tds.length; i++) {
+					if(tds[i].hasChildNodes()){
+						tds[i].removeChild(tds[i].firstChild)
+					}
+					//背面
+					tds[i].style.cssText="width: 145px;" +
+							"height: 195px;" +
+							"background-image: url(images/spade.jpg);" +
+							"background-position-x: -960px;" +
+							"background-position-y: -590px;" +
+							"background-repeat: no-repeat;" +
+							"background-color: transparent;" +
+							"background-attachment: scroll;" +
+							"border-color: blue;" +
+							"border-style: solid;" +
+							"border-width: 1px;";
+				}
+				counter=0;
+				click_num=0;
+				gameInit();
+				return;
+
+			}
+			else {
+				//不玩了
+				clearInterval(timer);
+				var body=document.getElementsByTagName("body")[0];
+				var div=document.createElement("div");
+				body.appendChild(div);
+				div.style.cssText="width:100%;height:100%;z-index: 3;text-align: center;position: absolute; background-color: green;top: 0px;font-size: 100px;";
+				div.innerText="游戏结束了，请关闭页面";
+				return;
+			}
+////////////////
+		}
+	}
+	//延时消失
+	function delayxiaoshi(el) {
+		setTimeout(xiaoshi,500,el);
+	}
+	var click_num=0;//点击次数
+	var el_pre=null;//第一张牌td
+	var el_next=null;//第二张牌td
+	var BACK_BG="transparent url(\"images/bg.png\") no-repeat scroll 0% 0%";//空白背景
+	function judge(e){
+		//判断是否等待
+		if(waitOver==true) {
+			//记录次数
+			click_num++;
+			var el = e.target;
+			if (el.tagName == 'TD' && el.style.background == BACK_BG) {
+				alert("不能单机空白！！！");
+				//click_num = 0;
+				//return;
+			}
+			//单击记录并翻牌
+			if (click_num == 1) {
+				el_pre = el;
+				fanpai(el_pre);
+			} else if (click_num == 2) {
+				el_next = el;
+				//第一下td，第二下空白
+				if(el_next.style.background == BACK_BG){
+					fanpai(el_pre.firstChild);
+					click_num = 0;
+					return;
+				}
+				fanpai(el_next);
+				//判断是否符合条件
+				//两次点击td
+				if (el_pre.tagName == 'TD' && el_next.tagName == 'TD') {
+					//背景相同
+					if (el_pre.firstChild.style.background == el_next.firstChild.style.background) {
+						//相同，td更换背景，div移除
+						delayxiaoshi(el_pre.firstChild);
+						delayxiaoshi(el_next.firstChild);
+						Wait();
+					}
+
+					else {
+						//不同，翻回
+						delayfanpai(el_pre.firstChild);
+						delayfanpai(el_next.firstChild);
+						Wait();
+					}
+				}
+
+				click_num = 0;
+				el_pre = null;
+				el_next = null;
+			}
+			return;
+		}
+		else {
+			alert("您点击的太快！！！");
+		}
+	}
+	function isWin(){
+		var table=document.getElementsByTagName('table')[0];
+		var tds=table.getElementsByTagName('td');
+		var win;
+		for (var i = 0; i < tds.length; i++) {
+			if(tds[i].style.background==BACK_BG){
+				win=true;
+			}else {
+				win = false;
+				return win;
+			}
+		}
+		return win;
+	}
+	//进度条
+	var CUR=0;
+	var TOTAL=25;
+	//计时
+	var counter=0;
+	var timer=null;
+	function init() {
+		var cur=document.getElementById('cur');
+		//textContent 属性设置或返回指定节点的文本内容，以及它的所有后代。
+		cur.textContent=CUR;
+		var total=document.getElementById('total');
+		total.textContent=TOTAL+"s";
+	}
+	//时间变化
+	function clock(){
+		counter++;
+		saveBack();
+		var cur=document.getElementById('cur');
+		cur.textContent=counter;
+		//时间到，未完成游戏
+		if(counter>TOTAL) {
+			getSounds("sounds/游戏失败.mp3");
+			alert("时间到，游戏结束！！");
+			clearInterval(timer);
+			//confirm() 方法用于显示一个带有指定消息和 OK 及取消按钮的对话框。
+			//想要继续游戏
+			if(confirm('游戏时间结束，你还要继续吗？')){
+				//惩罚
+				var body=document.getElementsByTagName("body")[0];
+				var div=document.createElement("div");
+				body.appendChild(div);
+				div.style.cssText="width:100%;height:100%;z-index: 3;text-align: center;position: absolute; background-color: green;top: 0px;font-size: 100px;";
+				delaygameWait(div);
+
+
+			}
+			//重新开始
+			else {
+				clearInterval(timer);
+				var body=document.getElementsByTagName("body")[0];
+				var div=document.createElement("div");
+				body.appendChild(div);
+				div.style.cssText="width:100%;height:100%;z-index: 3;text-align: center;position: absolute; background-color: green;top: 0px;font-size: 100px;";
+				div.innerText="游戏失败，请关闭页面";
+			}
+			return;
+		}
+
+		//更新记数条
+		var progress=document.getElementById('progress');
+		var per=counter/TOTAL;
+		progress.value=per;
+	}
+
+	//游戏惩罚，等待时间
+	var secon=10;
+	var se=secon;
+	function gameWait(div) {
+		if(secon>=0) {
+			div.innerText = secon + 's';
+			secon--;
+		}
+		else {
+			if(div!=null) {
+				div.parentNode.removeChild(div);
+				clearInterval(retimer);
+				secon=se*2;
+				se=secon;
+				counter = 0;
+				var cur = document.getElementById('cur');
+				cur.textContent = counter;
+				var progress = document.getElementById('progress');
+				var per = counter / TOTAL;
+				progress.value = per;
+				timer = setInterval(clock, 1000);
+			}
+		}
+	}
+	var retimer=null;
+	function delaygameWait(div) {
+		retimer=setInterval(gameWait,1000,div);
+	}
+	function gameInit(){
+		fapai();
+		var table=document.getElementsByTagName('table')[0];
+		var tds=table.getElementsByTagName('td');
+		for (var i = 0; i < tds.length; i++) {
+			tds[i].addEventListener("click",judge,false);
+		}
+		init();
+		timer=setInterval(clock,1000);//消除在clock
+	}
+
+	//保存进度
+	function saveBack(){
+		//选择器查找
+		var table=document.querySelector("table");
+		var tds=table.querySelectorAll("td");
+		//保存进度条
+		var cur=document.getElementById("cur");
+		var total=document.getElementById("total");
+		var curNum=parseInt(cur.innerText);
+		var totalNum=parseInt(total.innerText);
+		//保存table
+		//声明数组
+		var cardsArr=[];
+		for (var i = 0; i < tds.length; i++) {
+			if(tds[i].hasChildNodes()){
+				var div=tds[i].firstChild;
+				var div_cssText=div.style.cssText;
+				var elNode={'el':div_cssText};
+				var elStr=JSON.stringify(elNode);
+				cardsArr.push(elStr);
+			}
+			else {
+				var bg_cssBackground=tds[i].style.background;
+				var bgNode={'bg':bg_cssBackground};
+				var bgStr=JSON.stringify(bgNode);
+				cardsArr.push(bgStr);
+			}
+		}
+		if(window.localStorage){
+			//设置card为carsdArr
+			localStorage.setItem('cards',cardsArr);
+			localStorage.setItem('Cur',curNum);
+			localStorage.setItem('Total',totalNum);
+		}
+	}
+	function recoverCard(){
+		var table=document.getElementsByTagName("table")[0];
+		var trs=table.querySelectorAll("tr");//var trs=table.getElementsByTagName("tr");
+		//Array.prototype.slice(数组对象)
+		// 使用此方法，若不为数组对象会报错，因为只有数组对象有slice（）方法
+		//Array.prototype.slice.call(看成是数组对象)
+		var trArr=Array.prototype.slice(trs);
+		var tds=table.querySelectorAll("td");
+		for (var i = tds.length-1; i >= 0; i--) {
+			tds[i].parentNode.removeChild(tds[i]);
+		}
+		var cardsArr=localStorage.getItem('cards');
+		var backedCards=JSON.parse("["+cardsArr+"]");
+		if(cardsArr==null){
+			alert("您的浏览器不支持，请更新浏览器");
+			return;
+		}
+		var curNum=localStorage.getItem('Cur');
+		var cur=document.getElementById('cur');
+		cur.innerText=curNum;
+		counter=curNum;
+		var totalNum=localStorage.getItem('Total');
+		var total=document.getElementById('total');
+		total.innerText=totalNum;
+		var progress=document.getElementById('progress');
+		progress.value=curNum/totalNum;
+		for (var i = 0,tr=null; i < backedCards.length; i++) {
+			//创建tr
+			if(i%4==0){
+				tr=document.createElement("tr");
+			}
+			//创建td
+			var td=document.createElement("td");
+			//添加点击事件
+			td.addEventListener('click',judge,true);
+			//如果是bg,td的背景为bg
+			if(backedCards[i].bg){
+				td.style.background=backedCards[i].bg;
+			}
+			//如果是el，td创建div
+			else if(backedCards[i].el){
+				var div=document.createElement("div");
+				div.style.cssText=backedCards[i].el;
+				td.appendChild(div);
+			}
+			tr.appendChild(td);
+			table.appendChild(tr);
+		}
+		timer=setInterval(clock,1000);
+	}
+
+	//声音
+	function getSounds(str){
+		var audio=document.getElementsByTagName("audio")[0];
+		audio.src=str;
+		audio.loop=false;
+		audio.hidden=true;
+	}
+	window.onload=function () {
+		if(localStorage.getItem("cards")!=null)
+			if(confirm("是否继续游戏？")){
+				recoverCard();
+			}
+			else{
+				gameInit();
+			}
+		else {
+			gameInit();
+		}
+	}
+</script>
+	</head>
+	<body>
+		<audio autoplay="autoplay"></audio>
+		<div id="header">
+			<p><label id="cur"></label>/<label id="total"></label></p>
+			<progress id="progress"></progress>
+		</div>
+
+		<table>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+			</tr>
+		</table>
+
+	</body>
+</html>
